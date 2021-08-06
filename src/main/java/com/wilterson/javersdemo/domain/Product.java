@@ -27,4 +27,8 @@ public class Product {
 	public void setNamePrefix(String prefix) {
 		this.name = prefix + this.name;
 	}
+
+	public void reparent() {
+		// do nothing
+	}
 }

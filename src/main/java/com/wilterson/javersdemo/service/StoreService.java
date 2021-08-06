@@ -21,6 +21,7 @@ public class StoreService {
 	}
 
 	public void createStore(Store store) {
+		store.reparent();
 		storeRepository.save(store);
 	}
 

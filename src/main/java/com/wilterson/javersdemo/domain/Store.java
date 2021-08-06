@@ -2,10 +2,12 @@ package com.wilterson.javersdemo.domain;
 
 import lombok.*;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Builder
 @Getter
@@ -32,5 +34,14 @@ public class Store {
 	public void addProduct(Product product) {
 		product.setStore(this);
 		this.products.add(product);
+	}
+
+	public void reparent() {
+		if (!ObjectUtils.isEmpty(products)) {
+			products.forEach(product -> {
+				product.setStore(this);
+				product.reparent();
+			});
+		}
 	}
 }
