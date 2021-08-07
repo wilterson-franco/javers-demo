@@ -1,5 +1,6 @@
 package com.wilterson.javersdemo.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 
 import javax.persistence.*;
@@ -20,6 +21,7 @@ public class Product {
 
 	private double price;
 
+	@JsonBackReference
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "store_id")
 	private Store store;

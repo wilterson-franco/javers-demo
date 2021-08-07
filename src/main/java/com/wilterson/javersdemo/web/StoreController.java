@@ -2,6 +2,8 @@ package com.wilterson.javersdemo.web;
 
 import com.wilterson.javersdemo.domain.Product;
 import com.wilterson.javersdemo.domain.Store;
+import com.wilterson.javersdemo.domain.StoreWip;
+import com.wilterson.javersdemo.service.ConfigurationStoreService;
 import com.wilterson.javersdemo.service.StoreService;
 import org.javers.core.Changes;
 import org.javers.core.Javers;
@@ -10,24 +12,36 @@ import org.javers.repository.jql.JqlQuery;
 import org.javers.repository.jql.QueryBuilder;
 import org.javers.shadow.Shadow;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.ws.Response;
 import java.util.List;
 
 @RestController
 public class StoreController {
 
 	private final StoreService storeService;
+	private final ConfigurationStoreService configurationStoreService;
 	private final Javers javers;
 
-	public StoreController(StoreService customerService, Javers javers) {
+	public StoreController(StoreService customerService, ConfigurationStoreService configurationStoreService, Javers javers) {
 		this.storeService = customerService;
 		this.javers = javers;
+		this.configurationStoreService = configurationStoreService;
 	}
 
 	@PostMapping("/stores")
-	public void createStore(@RequestBody Store store) {
-		storeService.createStore(store);
+	public ResponseEntity<Store> createStore(@RequestBody StoreWip store) {
+		return ResponseEntity
+				.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(configurationStoreService.createStore(store));
+	}
+
+	@PostMapping("/stores/{storeGuid}/live")
+	public void checkIn(@PathVariable String storeGuid){
+		configurationStoreService.checkIn(storeGuid);
 	}
 
 	@PostMapping("/stores/{storeId}/products/random")

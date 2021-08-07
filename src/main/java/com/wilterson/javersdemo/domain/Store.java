@@ -1,20 +1,24 @@
 package com.wilterson.javersdemo.domain;
 
-import lombok.*;
-import org.springframework.util.CollectionUtils;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import org.springframework.util.ObjectUtils;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-@Builder
+@SuperBuilder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Store {
 
 	@Id
@@ -28,6 +32,9 @@ public class Store {
 
 	private String status;
 
+	private String guid;
+
+	@JsonManagedReference
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Product> products = new ArrayList<>();
 

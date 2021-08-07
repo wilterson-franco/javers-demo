@@ -12,17 +12,13 @@ import java.util.Random;
 
 @Service
 public class StoreService {
+
 	private final ProductRepository productRepository;
 	private final StoreRepository storeRepository;
 
 	public StoreService(ProductRepository productRepository, StoreRepository storeRepository) {
 		this.productRepository = productRepository;
 		this.storeRepository = storeRepository;
-	}
-
-	public void createStore(Store store) {
-		store.reparent();
-		storeRepository.save(store);
 	}
 
 	public void updateProductPrice(Integer productId, Double price) {
