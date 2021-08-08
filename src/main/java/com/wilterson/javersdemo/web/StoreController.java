@@ -47,6 +47,15 @@ public class StoreController {
 		configurationStoreService.checkIn(storeId);
 	}
 
+	@PutMapping("/stores/{storeId}/config")
+	public ResponseEntity<Store> checkOut(@PathVariable Integer storeId) {
+		return ResponseEntity
+				.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+//				.body(configurationStoreService.createStore(configurationStoreService.checkOut(storeId)));
+				.body(configurationStoreService.checkOut(storeId));
+	}
+
 	@PostMapping("/stores/{storeId}/products/random")
 	public void createRandomProduct(@PathVariable final Integer storeId) {
 		storeService.createRandomProduct(storeId);

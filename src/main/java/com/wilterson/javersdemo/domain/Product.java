@@ -21,6 +21,8 @@ public class Product {
 
 	private double price;
 
+	private Integer liveProduct;
+
 	@JsonBackReference
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "store_id")
@@ -37,5 +39,6 @@ public class Product {
 	public void copyProperties(Product from) {
 		price = from.getPrice();
 		name = from.getName();
+		liveProduct = from.getLiveProduct();
 	}
 }

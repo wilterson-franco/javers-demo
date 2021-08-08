@@ -1,6 +1,8 @@
 package com.wilterson.javersdemo.service;
 
 
+import com.wilterson.javersdemo.domain.Address;
+import com.wilterson.javersdemo.domain.Product;
 import com.wilterson.javersdemo.domain.Store;
 import com.wilterson.javersdemo.repo.ConfigurationStoreRepository;
 import com.wilterson.javersdemo.repo.ProductRepository;
@@ -9,7 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ConfigurationStoreService {
@@ -49,12 +54,38 @@ public class ConfigurationStoreService {
 			Store live = configurationStoreRepository.findById(wip.getLiveStoreId())
 					.orElseThrow(() -> new EntityNotFoundException("Live store not found"));
 
+			// TODO: check if wip got in fact changed before changing the live version
+
+			live.copyProperties(wip);
+			live.setStatus("LIVE");
+			live.setLiveStoreId(null);
+			live.getProducts().forEach(liveProd -> liveProd.setLiveProduct(null));
+			live.reparent();
+
 			storeRepository.save(live);
 			configurationStoreRepository.delete(wip);
 		} else {
 			wip.setStatus("LIVE");
 			storeRepository.save(wip);
 		}
+	}
+
+	public Store checkOut(Integer storeId) {
+		Store live = configurationStoreRepository.findById(storeId)
+				.orElseThrow(() -> new EntityNotFoundException("Live store not found"));
+
+		Store wip = Store
+				.builder()
+				.address(new Address())
+				.products(new ArrayList<>())
+				.build();
+
+		wip.copyProperties(live);
+		wip.setLiveStoreId(live.getId());
+		wip.setStatus("CONFIGURATION");
+		wip.reparent();
+
+		return configurationStoreRepository.save(wip);
 	}
 
 	protected String guid() {
