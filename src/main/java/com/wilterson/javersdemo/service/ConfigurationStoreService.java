@@ -2,15 +2,13 @@ package com.wilterson.javersdemo.service;
 
 
 import com.wilterson.javersdemo.domain.Store;
-import com.wilterson.javersdemo.domain.StoreWip;
 import com.wilterson.javersdemo.repo.ConfigurationStoreRepository;
 import com.wilterson.javersdemo.repo.ProductRepository;
 import com.wilterson.javersdemo.repo.StoreRepository;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -25,26 +23,38 @@ public class ConfigurationStoreService {
 		this.storeRepository = storeRepository;
 	}
 
-	public Store createStore(StoreWip storeWip) {
+	public Store createStore(Store storeWip) {
 		storeWip.setStatus("CONFIGURATION");
 		storeWip.setGuid(guid());
 		storeWip.reparent();
 		return configurationStoreRepository.save(storeWip);
 	}
 
-	public void checkIn(String guid) {
+	public void update(Integer storeId, Store updatedStore) {
+		Store wip = configurationStoreRepository.findById(storeId)
+				.orElseThrow(() -> new EntityNotFoundException("Store not found"));
 
-		StoreWip storeWip = configurationStoreRepository
-				.findByLiveStoreGuid(guid)
-				.orElseThrow(() -> new EntityNotFoundException("Store " + guid + " not found"));
+		wip.copyProperties(updatedStore);
+		wip.setStatus("CONFIGURATION");
+		wip.reparent();
 
-		storeRepository.findByGuid(storeWip.getLiveStoreGuid())
-				.ifPresent(store -> {
-					BeanUtils.copyProperties(storeWip, store);
-					store.setStatus("LIVE");
-					storeRepository.save(store);
-					configurationStoreRepository.delete(storeWip);
-				});
+		configurationStoreRepository.save(wip);
+	}
+
+	public void checkIn(Integer storeId) {
+		Store wip = configurationStoreRepository.findById(storeId)
+				.orElseThrow(() -> new EntityNotFoundException("Store not found"));
+
+		if (!ObjectUtils.isEmpty(wip.getLiveStoreId())) {
+			Store live = configurationStoreRepository.findById(wip.getLiveStoreId())
+					.orElseThrow(() -> new EntityNotFoundException("Live store not found"));
+
+			storeRepository.save(live);
+			configurationStoreRepository.delete(wip);
+		} else {
+			wip.setStatus("LIVE");
+			storeRepository.save(wip);
+		}
 	}
 
 	protected String guid() {
@@ -55,8 +65,6 @@ public class ConfigurationStoreService {
 			int index = (int) (rnd.nextFloat() * SALTCHARS.length());
 			salt.append(SALTCHARS.charAt(index));
 		}
-		String saltStr = salt.toString();
-//		return saltStr;
-		return "ABCDEFGHIJ";
+		return salt.toString();
 	}
 }

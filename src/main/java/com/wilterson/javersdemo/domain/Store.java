@@ -18,12 +18,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
 public class Store {
 
 	@Id
 	@GeneratedValue
-	private int id;
+	private Integer id;
 
 	private String name;
 
@@ -33,6 +32,8 @@ public class Store {
 	private String status;
 
 	private String guid;
+
+	private Integer liveStoreId;
 
 	@JsonManagedReference
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -49,6 +50,24 @@ public class Store {
 				product.setStore(this);
 				product.reparent();
 			});
+		}
+	}
+
+	public void copyProperties(Store from) {
+		name = from.getName();
+		status = from.getStatus();
+		guid = from.getGuid();
+
+		if (!ObjectUtils.isEmpty(address)) {
+			address.copyProperties(from.getAddress());
+		}
+
+		if (!ObjectUtils.isEmpty(products)) {
+			products.forEach(p ->
+					p.copyProperties(from.getProducts()
+							.stream()
+							.filter(prod -> prod.getId().equals(p.getId()))
+							.findFirst().orElseThrow(() -> new EntityNotFoundException("Product not found"))));
 		}
 	}
 }

@@ -15,7 +15,7 @@ public class Product {
 
 	@Id
 	@GeneratedValue
-	private int id;
+	private Integer id;
 
 	private String name;
 
@@ -32,5 +32,10 @@ public class Product {
 
 	public void reparent() {
 		// do nothing
+	}
+
+	public void copyProperties(Product from) {
+		price = from.getPrice();
+		name = from.getName();
 	}
 }
