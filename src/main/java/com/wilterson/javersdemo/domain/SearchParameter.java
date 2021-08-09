@@ -11,7 +11,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class Product {
+public class SearchParameter {
 
 	@Id
 	@GeneratedValue
@@ -19,26 +19,22 @@ public class Product {
 
 	private String name;
 
-	private double price;
+	private boolean required;
 
-	private Integer liveProduct;
+	private Integer sourceEntityId;
 
 	@JsonBackReference
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "store_id")
-	private Store store;
-
-	public void setNamePrefix(String prefix) {
-		this.name = prefix + this.name;
-	}
+	@JoinColumn(name = "merchant_id")
+	private Merchant merchant;
 
 	public void reparent() {
 		// do nothing
 	}
 
-	public void copyProperties(Product from) {
-		price = from.getPrice();
+	public void copyProperties(SearchParameter from) {
+		required = from.isRequired();
 		name = from.getName();
-		liveProduct = from.getLiveProduct();
+		sourceEntityId = from.getSourceEntityId();
 	}
 }
