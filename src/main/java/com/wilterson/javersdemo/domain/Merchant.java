@@ -94,7 +94,7 @@ public class Merchant {
 					.filter(thisProd ->
 							thisProd.getId().equals(prodToMap.getId()) ||
 									thisProd.getId().equals(prodToMap.getSourceEntityId()) ||
-									prodToMap.getId().equals(thisProd.getSourceEntityId()))
+									(!ObjectUtils.isEmpty(prodToMap.getId()) && prodToMap.getId().equals(thisProd.getSourceEntityId())))
 					.findFirst();
 			map.put(prodToMap, optionalThisProd);
 		}

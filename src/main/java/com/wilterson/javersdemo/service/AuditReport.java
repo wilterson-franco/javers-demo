@@ -1,8 +1,9 @@
-package com.wilterson.javersdemo.web;
+package com.wilterson.javersdemo.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Builder
@@ -18,5 +19,5 @@ public class AuditReport {
 	private Object newPropertyValue;
 	private Object oldPropertyValue;
 	private String author;
-	private LocalDateTime commitDatetime;
+	private Instant commitDatetime;
 }

@@ -1,10 +1,9 @@
 package com.wilterson.javersdemo.service;
 
-import com.wilterson.javersdemo.web.ChangeType;
-import com.wilterson.javersdemo.web.AuditReport;
 import org.javers.core.Changes;
 import org.javers.core.diff.Change;
 import org.javers.core.diff.changetype.NewObject;
+import org.javers.core.diff.changetype.ObjectRemoved;
 import org.javers.core.diff.changetype.ValueChange;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +26,7 @@ public class AuditReportService {
 		for (Change change : changes) {
 			if (change instanceof ValueChange) {
 				ValueChange valueChange = (ValueChange) change;
-				AuditReport rec = AuditReport
+				AuditReport auditReport = AuditReport
 						.builder()
 						.propertyName(valueChange.getPropertyName())
 						.oldPropertyValue(valueChange.getLeft())
@@ -36,22 +35,26 @@ public class AuditReportService {
 						.entity(valueChange.getAffectedGlobalId().getTypeName())
 						.build();
 				valueChange.getCommitMetadata().ifPresent(val -> {
-					rec.setAuthor(val.getAuthor());
-					rec.setCommitDatetime(val.getCommitDate());
+					auditReport.setAuthor(val.getAuthor());
+					auditReport.setCommitDatetime(val.getCommitDateInstant());
 				});
-				auditReportItems.add(rec);
+				auditReportItems.add(auditReport);
 			} else if (change instanceof NewObject) {
 				NewObject newObject = (NewObject) change;
-				AuditReport rec = AuditReport
+				AuditReport auditReport = AuditReport
 						.builder()
 						.changeType(ChangeType.NEW_ENTITY)
 						.entity(newObject.getAffectedGlobalId().getTypeName())
 						.build();
 				newObject.getCommitMetadata().ifPresent(val -> {
-					rec.setAuthor(val.getAuthor());
-					rec.setCommitDatetime(val.getCommitDate());
-					auditReportItems.add(rec);
+					auditReport.setAuthor(val.getAuthor());
+					auditReport.setCommitDatetime(val.getCommitDateInstant());
+					auditReportItems.add(auditReport);
 				});
+			} else if (change instanceof ObjectRemoved) {
+
+				// TODO: to be implemented
+
 			}
 		}
 		return auditReportItems.stream().sorted(new AuditReportComparator()).collect(Collectors.toList());

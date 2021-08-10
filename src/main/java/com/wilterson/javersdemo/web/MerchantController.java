@@ -1,5 +1,6 @@
 package com.wilterson.javersdemo.web;
 
+import com.wilterson.javersdemo.service.AuditReport;
 import com.wilterson.javersdemo.domain.Merchant;
 import com.wilterson.javersdemo.domain.SearchParameter;
 import com.wilterson.javersdemo.service.AuditReportService;
@@ -16,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 @RestController
 public class MerchantController {
@@ -84,6 +84,17 @@ public class MerchantController {
 				.withChildValueObjects().build();
 		List<Shadow<Merchant>> shadows = javers.findShadows(jqlQuery);
 		return javers.getJsonConverter().toJson(shadows.get(0));
+	}
+
+	@GetMapping("/merchants/{merchantId}/changes")
+	public ResponseEntity<List<AuditReport>> getMerchantChanges(@PathVariable int merchantId) {
+		Merchant merchant = merchantService.findMerchantById(merchantId);
+		QueryBuilder jqlQuery = QueryBuilder.byInstance(merchant);
+		Changes changes = javers.findChanges(jqlQuery.build());
+		return ResponseEntity
+				.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(auditReportService.generateAuditReport(changes));
 	}
 
 	@GetMapping("/merchants/snapshots")

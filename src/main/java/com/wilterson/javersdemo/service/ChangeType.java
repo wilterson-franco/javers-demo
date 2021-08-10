@@ -1,4 +1,4 @@
-package com.wilterson.javersdemo.web;
+package com.wilterson.javersdemo.service;
 
 public enum ChangeType {
 	PROPERTY_ADDED,
