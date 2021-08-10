@@ -2,6 +2,7 @@ package com.wilterson.javersdemo.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
+import org.javers.core.metamodel.annotation.DiffIgnore;
 
 import javax.persistence.*;
 
@@ -15,14 +16,17 @@ public class SearchParameter {
 
 	@Id
 	@GeneratedValue
+	@DiffIgnore
 	private Integer id;
 
 	private String name;
 
 	private boolean required;
 
+	@DiffIgnore
 	private Integer sourceEntityId;
 
+	@DiffIgnore
 	@JsonBackReference
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "merchant_id")

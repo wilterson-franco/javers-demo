@@ -2,6 +2,7 @@ package com.wilterson.javersdemo.web;
 
 import com.wilterson.javersdemo.domain.Merchant;
 import com.wilterson.javersdemo.domain.SearchParameter;
+import com.wilterson.javersdemo.service.AuditReportService;
 import com.wilterson.javersdemo.service.ConfigMerchantService;
 import com.wilterson.javersdemo.service.MerchantService;
 import org.javers.core.Changes;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 public class MerchantController {
@@ -22,11 +24,13 @@ public class MerchantController {
 	private final MerchantService merchantService;
 	private final ConfigMerchantService configMerchantService;
 	private final Javers javers;
+	private final AuditReportService auditReportService;
 
-	public MerchantController(MerchantService customerService, ConfigMerchantService configMerchantService, Javers javers) {
+	public MerchantController(MerchantService customerService, ConfigMerchantService configMerchantService, Javers javers, AuditReportService auditReportService) {
 		this.merchantService = customerService;
 		this.javers = javers;
 		this.configMerchantService = configMerchantService;
+		this.auditReportService = auditReportService;
 	}
 
 	@PostMapping("/merchants")
@@ -56,11 +60,14 @@ public class MerchantController {
 	}
 
 	@GetMapping("/searchParameters/{searchParameterId}/changes")
-	public String getSearchParameterChanges(@PathVariable int searchParameterId) {
+	public ResponseEntity<List<AuditReport>> getSearchParameterChanges(@PathVariable int searchParameterId) {
 		SearchParameter searchParameter = merchantService.findSearchParameterById(searchParameterId);
 		QueryBuilder jqlQuery = QueryBuilder.byInstance(searchParameter);
 		Changes changes = javers.findChanges(jqlQuery.build());
-		return javers.getJsonConverter().toJson(changes);
+		return ResponseEntity
+				.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(auditReportService.generateAuditReport(changes));
 	}
 
 	@GetMapping("/searchParameters/snapshots")
