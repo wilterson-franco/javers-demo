@@ -14,9 +14,9 @@ import javax.persistence.*;
 @Entity
 public class SearchParameter {
 
+	@DiffIgnore
 	@Id
 	@GeneratedValue
-	@DiffIgnore
 	private Integer id;
 
 	private String name;

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.javers.core.metamodel.annotation.DiffIgnore;
 import org.springframework.util.ObjectUtils;
 
 import javax.persistence.*;
@@ -19,6 +20,7 @@ import java.util.*;
 @Entity
 public class Merchant {
 
+	@DiffIgnore
 	@Id
 	@GeneratedValue
 	private Integer id;
@@ -28,10 +30,13 @@ public class Merchant {
 	@Embedded
 	private Address address;
 
+//	@DiffIgnore
 	private String status;
 
+	@DiffIgnore
 	private String guid;
 
+	@DiffIgnore
 	private Integer sourceEntityId;
 
 	@JsonManagedReference
