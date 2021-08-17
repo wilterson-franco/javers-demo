@@ -36,18 +36,6 @@ public class AuditController {
 	 * RAW CHANGES
 	 *****************************************************************************************************/
 
-	@GetMapping("/merchants/{merchantId}/raw-changes2")
-	public ResponseEntity<String> getMerchantRawChanges2(@PathVariable int merchantId) {
-		Merchant merchant = merchantService.findMerchantById(merchantId);
-		QueryBuilder jqlQuery = QueryBuilder.byInstance(merchant);
-		Changes changes = javers.findChanges(jqlQuery.build());
-
-		return ResponseEntity
-				.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(javers.getJsonConverter().toJson(changes));
-	}
-
 	@GetMapping("/merchants/{merchantId}/raw-changes")
 	public ResponseEntity<String> getMerchantRawChanges(@PathVariable int merchantId) {
 		Merchant merchant = merchantService.findMerchantById(merchantId);

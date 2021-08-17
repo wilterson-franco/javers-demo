@@ -8,6 +8,7 @@ import com.wilterson.javersdemo.repo.MerchantRepository;
 import com.wilterson.javersdemo.repo.SearchParameterRepository;
 import org.javers.core.Javers;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 import javax.persistence.EntityNotFoundException;
@@ -33,7 +34,8 @@ public class MerchantService {
 		return merchantRepository.save(merchantWip);
 	}
 
-	public void update(Integer merchantId, Merchant updatedMerchant) {
+	@Transactional
+	public Merchant update(Integer merchantId, Merchant updatedMerchant) {
 		Merchant wip = merchantRepository.findById(merchantId)
 				.orElseThrow(() -> new EntityNotFoundException("Merchant not found"));
 
@@ -41,12 +43,15 @@ public class MerchantService {
 		wip.setStatus("CONFIGURATION");
 		wip.reparent();
 
-		merchantRepository.save(wip);
+		return merchantRepository.save(wip);
 	}
 
-	public void checkIn(Integer merchantId) {
+	@Transactional
+	public Merchant checkIn(Integer merchantId) {
 		Merchant wip = merchantRepository.findById(merchantId)
 				.orElseThrow(() -> new EntityNotFoundException("Merchant not found"));
+
+		Merchant liveMerchant;
 
 		if (!ObjectUtils.isEmpty(wip.getSourceEntityId())) {
 			Merchant live = merchantRepository.findById(wip.getSourceEntityId())
@@ -60,17 +65,20 @@ public class MerchantService {
 			live.getSearchParameters().forEach(liveProd -> liveProd.setSourceEntityId(null));
 			live.reparent();
 
-			merchantRepository.save(live);
+			liveMerchant = merchantRepository.save(live);
 			merchantRepository.delete(wip);
 			javers.commit("Wilterson Test", live);
 		} else {
 			wip.setStatus("LIVE");
-			merchantRepository.save(wip);
-			javers.commit("Wilterson Test", wip);
-
+			liveMerchant = merchantRepository.save(wip);
+//			javers.commit("Wilterson Test", wip);
+			javers.commit("Wilterson Test", liveMerchant);
 		}
+
+		return liveMerchant;
 	}
 
+	@Transactional
 	public Merchant checkOut(Integer merchantId) {
 		Merchant live = merchantRepository.findById(merchantId)
 				.orElseThrow(() -> new EntityNotFoundException("Live merchant not found"));
