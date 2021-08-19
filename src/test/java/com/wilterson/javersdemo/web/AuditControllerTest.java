@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class AuditControllerTest {
 
-	private static final String MERCHANT_CHANGES = "/merchants/{merchantId}/changes";
+	private static final String MERCHANT_CHANGES = "/merchants/{merchantId}/propertyChanges";
 
 	@Autowired
 	MockMvc mockMvc;

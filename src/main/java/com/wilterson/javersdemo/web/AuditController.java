@@ -2,10 +2,9 @@ package com.wilterson.javersdemo.web;
 
 import com.wilterson.javersdemo.domain.Merchant;
 import com.wilterson.javersdemo.domain.SearchParameter;
-import com.wilterson.javersdemo.service.AuditReport;
-import com.wilterson.javersdemo.service.AuditReportService;
-import com.wilterson.javersdemo.service.MerchantService;
+import com.wilterson.javersdemo.service.*;
 import org.javers.core.Changes;
+import org.javers.core.ChangesByCommit;
 import org.javers.core.Javers;
 import org.javers.core.metamodel.object.CdoSnapshot;
 import org.javers.repository.jql.JqlQuery;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -24,12 +24,14 @@ public class AuditController {
 
 	private final MerchantService merchantService;
 	private final AuditReportService auditReportService;
+	private final AuditReportServiceImproved auditReportServiceImproved;
 	private final Javers javers;
 
-	public AuditController(MerchantService merchantService, AuditReportService auditReportService, Javers javers) {
+	public AuditController(MerchantService merchantService, AuditReportService auditReportService, Javers javers, AuditReportServiceImproved auditReportServiceImproved) {
 		this.merchantService = merchantService;
 		this.auditReportService = auditReportService;
 		this.javers = javers;
+		this.auditReportServiceImproved = auditReportServiceImproved;
 	}
 
 	/*****************************************************************************************************
@@ -40,7 +42,7 @@ public class AuditController {
 	public ResponseEntity<String> getMerchantRawChanges(@PathVariable int merchantId) {
 		Merchant merchant = merchantService.findMerchantById(merchantId);
 		QueryBuilder jqlQuery = QueryBuilder.byInstance(merchant);
-		Changes changes = javers.findChanges(jqlQuery.build());
+		List<ChangesByCommit> changes = javers.findChanges(jqlQuery.build()).groupByCommit();
 
 		return ResponseEntity
 				.ok()
@@ -50,7 +52,7 @@ public class AuditController {
 //		return ResponseEntity
 //				.ok()
 //				.contentType(MediaType.APPLICATION_JSON)
-//				.body(changes.prettyPrint());
+//				.body(propertyChanges.prettyPrint());
 	}
 
 	@GetMapping("/searchParameters/{searchParameterId}/raw-changes")
@@ -67,7 +69,7 @@ public class AuditController {
 //		return ResponseEntity
 //				.ok()
 //				.contentType(MediaType.APPLICATION_JSON)
-//				.body(changes.prettyPrint());
+//				.body(propertyChanges.prettyPrint());
 	}
 
 	/*****************************************************************************************************
@@ -130,12 +132,14 @@ public class AuditController {
 	 *****************************************************************************************************/
 
 	@GetMapping("/merchants/{merchantId}/changes")
-	public ResponseEntity<List<AuditReport>> getMerchantChanges(@PathVariable int merchantId) {
+	public ResponseEntity<List<AuditReportImproved>> getMerchantChanges(@PathVariable int merchantId) {
 		Merchant merchant = merchantService.findMerchantById(merchantId);
+		List<AuditReportImproved> auditReportItems = new ArrayList<>();
+		auditReportServiceImproved.auditReport(auditReportItems, merchant.getId(), merchant.getClass().getName());
 		return ResponseEntity
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
-				.body(auditReportService.auditReport(merchant.getId(), merchant.getClass().getName()));
+				.body(auditReportItems);
 	}
 
 	@GetMapping("/searchParameters/{searchParameterId}/changes")

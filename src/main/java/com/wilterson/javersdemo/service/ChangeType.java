@@ -5,5 +5,10 @@ public enum ChangeType {
 	PROPERTY_REMOVED,
 	PROPERTY_VALUE_CHANGED,
 	DELETED_ENTITY,
-	NEW_ENTITY
+	NEW_ENTITY,
+
+	NewObject,
+	CollectionChange,
+	ValueChange,
+	PropertyValueChange
 }
