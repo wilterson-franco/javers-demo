@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class AuditController {
@@ -133,13 +134,14 @@ public class AuditController {
 
 	@GetMapping("/merchants/{merchantId}/changes")
 	public ResponseEntity<List<AuditReportImproved>> getMerchantChanges(@PathVariable int merchantId) {
+
 		Merchant merchant = merchantService.findMerchantById(merchantId);
 		List<AuditReportImproved> auditReportItems = new ArrayList<>();
 		auditReportServiceImproved.auditReport(auditReportItems, merchant.getId(), merchant.getClass().getName());
 		return ResponseEntity
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
-				.body(auditReportItems);
+				.body(auditReportItems.stream().sorted(new AuditReportComparator()).collect(Collectors.toList()));
 	}
 
 	@GetMapping("/searchParameters/{searchParameterId}/changes")

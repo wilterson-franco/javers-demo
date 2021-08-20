@@ -36,6 +36,9 @@ public class AuditReportServiceImproved {
 			AuditReportImproved auditReportImproved = new AuditReportImproved();
 
 			for (Change change : byCommit.get()) {
+				auditReportImproved.setChangeType(ChangeType.NewObject);
+				setMetadata(auditReportImproved, change);
+				setEntityRef(auditReportImproved, change);
 				generateAuditReport(auditReportImproved, change);
 			}
 
@@ -51,9 +54,7 @@ public class AuditReportServiceImproved {
 
 	public void generateAuditReport(AuditReportImproved auditReportImproved, Change change) {
 
-		if (isNewObject(change)) {
-			handleNewObject(auditReportImproved, change);
-		} else if (isValueChange(change) || isInitialValueChange(change)) {
+		if (isValueChange(change) || isInitialValueChange(change)) {
 			handleValueChange(auditReportImproved, (ValueChange) change);
 		} else if (isMapChange(change)) {
 			// TODO:
@@ -105,7 +106,7 @@ public class AuditReportServiceImproved {
 		}
 	}
 
-	private void handleNewObject(AuditReportImproved auditReportImproved, Change change) {
+	private void setMetadata(AuditReportImproved auditReportImproved, Change change) {
 
 		Metadata metadata = new Metadata();
 
@@ -115,13 +116,18 @@ public class AuditReportServiceImproved {
 			metadata.setCommitDatetime(val.getCommitDateInstant());
 		});
 
-		auditReportImproved.setChangeType(ChangeType.NewObject);
 		auditReportImproved.setMetadata(metadata);
-		auditReportImproved.setEntityRef(EntityRef
+	}
+
+	private void setEntityRef(AuditReportImproved auditReportImproved, Change change) {
+		EntityRef entityRef = EntityRef
 				.builder()
 				.entity(change.getAffectedGlobalId().getTypeName())
-				.entityId(((InstanceId) change.getAffectedGlobalId()).getCdoId())
-				.build());
+				.build();
+		if (change.getAffectedGlobalId() instanceof InstanceId) {
+			entityRef.setEntityId(((InstanceId) change.getAffectedGlobalId()).getCdoId());
+		}
+		auditReportImproved.setEntityRef(entityRef);
 	}
 
 	private void handleValueChange(AuditReportImproved auditReportImproved, ValueChange valueChange) {
