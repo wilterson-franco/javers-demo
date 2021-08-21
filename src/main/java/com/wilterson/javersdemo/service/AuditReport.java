@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuditReportImproved {
+public class AuditReport {
 	private ChangeType changeType;
 	private Metadata metadata;
 	private EntityRef entityRef;
@@ -29,8 +29,8 @@ public class AuditReportImproved {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof AuditReportImproved) {
-			AuditReportImproved that = (AuditReportImproved) obj;
+		if (obj instanceof AuditReport) {
+			AuditReport that = (AuditReport) obj;
 			return this.changeType == that.getChangeType()
 					&& isMetadataEqualsTo(that.getMetadata())
 					&& isEntityRefEqualsTo(that.getEntityRef())
@@ -41,7 +41,7 @@ public class AuditReportImproved {
 
 	@Override
 	public String toString() {
-		return "AuditReportImproved{" +
+		return "AuditReport{" +
 				"changeType=" + changeType +
 				", metadata=" + metadata +
 				", entityRef=" + entityRef +
@@ -70,7 +70,7 @@ public class AuditReportImproved {
 	private boolean propertyChangesContainsAll(List<PropertyChange> thatList) {
 		if (!CollectionUtils.isEmpty(this.propertyChanges)) {
 			return this.propertyChanges.containsAll(thatList);
-		} else if (CollectionUtils.isEmpty(thatList)){
+		} else if (CollectionUtils.isEmpty(thatList)) {
 			return true;
 		}
 		return false;

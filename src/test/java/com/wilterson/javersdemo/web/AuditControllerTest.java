@@ -99,11 +99,11 @@ class AuditControllerTest {
 				.andReturn();
 
 		// then
-		JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, AuditReportImproved.class);
-		List<AuditReportImproved> resp = objectMapper.readValue(result.getResponse().getContentAsString(), type);
+		JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, AuditReport.class);
+		List<AuditReport> resp = objectMapper.readValue(result.getResponse().getContentAsString(), type);
 
-		List<AuditReportImproved> expected = Stream.of(
-				AuditReportImproved.builder().build())
+		List<AuditReport> expected = Stream.of(
+				AuditReport.builder().build())
 				.collect(Collectors.toList());
 
 		// Three changes:
@@ -112,24 +112,24 @@ class AuditControllerTest {
 		// 2. searchParameter update (name TRANSACTION_ID to ARN and required true to false)
 		assertThat(resp).hasSize(3);
 
-		AuditReportImproved auditReportImproved = resp.get(0);
+		AuditReport auditReport = resp.get(0);
 
-		assertThat(auditReportImproved.getChangeType()).isEqualTo(ChangeType.NewObject);
+		assertThat(auditReport.getChangeType()).isEqualTo(ChangeType.NewObject);
 
-		assertThat(auditReportImproved.getEntityRef().getEntity()).isEqualTo("com.wilterson.javersdemo.domain.Merchant");
-		assertThat(auditReportImproved.getEntityRef().getEntityId()).isEqualTo(1);
+		assertThat(auditReport.getEntityRef().getEntity()).isEqualTo("com.wilterson.javersdemo.domain.Merchant");
+		assertThat(auditReport.getEntityRef().getEntityId()).isEqualTo(1);
 
-		assertThat(auditReportImproved.getMetadata().getAuthor()).isEqualTo("Wilterson Test");
-		assertThat(auditReportImproved.getMetadata().getCommitId()).isEqualTo("1.00");
-		assertThat(auditReportImproved.getMetadata().getCommitDatetime()).isBeforeOrEqualTo(Instant.now());
+		assertThat(auditReport.getMetadata().getAuthor()).isEqualTo("Wilterson Test");
+		assertThat(auditReport.getMetadata().getCommitId()).isEqualTo("1.00");
+		assertThat(auditReport.getMetadata().getCommitDatetime()).isBeforeOrEqualTo(Instant.now());
 
-		assertThat(auditReportImproved.getPropertyChanges()).contains(PropertyChange
+		assertThat(auditReport.getPropertyChanges()).contains(PropertyChange
 				.builder()
 				.type(PropertyChangeType.PROPERTY_VALUE_CHANGED)
 				.property("searchParameters")
 				.left(null)
 				.right(null)
-				.elementChanges(Collections.singletonList(AuditReportImproved
+				.elementChanges(Collections.singletonList(AuditReport
 						.builder()
 						.changeType(ChangeType.NewObject)
 						.metadata(null)

@@ -21,52 +21,52 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-public class AuditReportServiceImproved {
+public class AuditReportService {
 
 	private final Javers javers;
 
-	public AuditReportServiceImproved(Javers javers) {
+	public AuditReportService(Javers javers) {
 		this.javers = javers;
 	}
 
-	public void auditReport(List<AuditReportImproved> auditReportItems, int entityId, String typeName) {
+	public void auditReport(List<AuditReport> auditReportItems, int entityId, String typeName) {
 		QueryBuilder jqlQuery = QueryBuilder.byInstanceId(entityId, typeName).withChildValueObjects();
 		List<ChangesByCommit> changesByCommit = javers.findChanges(jqlQuery.build()).groupByCommit();
 
 		for (ChangesByCommit byCommit : changesByCommit) {
 
-			AuditReportImproved auditReportImproved = new AuditReportImproved();
+			AuditReport auditReport = new AuditReport();
 
 			if (!CollectionUtils.isEmpty(byCommit.get())) {
 				Change change = byCommit.get().get(0);
-				setMetadata(auditReportImproved, change);
-				setEntityRef(auditReportImproved, change);
-				setChangeType(auditReportImproved, byCommit.get());
+				setMetadata(auditReport, change);
+				setEntityRef(auditReport, change);
+				setChangeType(auditReport, byCommit.get());
 			}
 
 			for (Change change : byCommit.get()) {
-				generateAuditReport(auditReportImproved, change);
+				generateAuditReport(auditReport, change);
 			}
 
-			auditReportItems.add(auditReportImproved);
+			auditReportItems.add(auditReport);
 
-			for (PropertyChange change : auditReportImproved.getPropertyChanges()) {
-				for (AuditReportImproved elementChange : change.getElementChanges()) {
+			for (PropertyChange change : auditReport.getPropertyChanges()) {
+				for (AuditReport elementChange : change.getElementChanges()) {
 					auditReport(auditReportItems, (Integer) elementChange.getEntityRef().getEntityId(), elementChange.getEntityRef().getEntity());
 				}
 			}
 		}
 	}
 
-	public void generateAuditReport(AuditReportImproved auditReportImproved, Change change) {
+	public void generateAuditReport(AuditReport auditReport, Change change) {
 		if (isValueChange(change) || isInitialValueChange(change)) {
-			handleValueChange(auditReportImproved, (ValueChange) change);
+			handleValueChange(auditReport, (ValueChange) change);
 		} else if (isMapChange(change)) {
 			// TODO:
 			System.out.println("something");
 		} else if (isContainerChange(change)) {
 			ContainerChange containerChange = (ContainerChange) change;
-			auditReportImproved.addPropertyChange(PropertyChange
+			auditReport.addPropertyChange(PropertyChange
 					.builder()
 					.type(containerChange.getChangeType())
 					.property(containerChange.getPropertyName())
@@ -81,44 +81,44 @@ public class AuditReportServiceImproved {
 		}
 	}
 
-	private void setChangeType(AuditReportImproved auditReportImproved, List<Change> changes) {
+	private void setChangeType(AuditReport auditReport, List<Change> changes) {
 		if (changes.stream().anyMatch(change -> change instanceof NewObject || change instanceof InitialValueChange)) {
-			auditReportImproved.setChangeType(ChangeType.NewObject);
+			auditReport.setChangeType(ChangeType.NewObject);
 			return;
 		}
 		if (changes.stream().anyMatch(change -> change instanceof ObjectRemoved)) {
-			auditReportImproved.setChangeType(ChangeType.DeletedObject);
+			auditReport.setChangeType(ChangeType.DeletedObject);
 			return;
 		}
 		if (changes.stream().anyMatch(change -> change instanceof org.javers.core.diff.changetype.PropertyChange)) {
-			auditReportImproved.setChangeType(ChangeType.ValueChange);
+			auditReport.setChangeType(ChangeType.ValueChange);
 			return;
 		}
 	}
 
-	private List<AuditReportImproved> handleContainerChange(ContainerChange containerChange) {
+	private List<AuditReport> handleContainerChange(ContainerChange containerChange) {
 
-		List<AuditReportImproved> auditReportImprovedItems = new ArrayList<>();
-		AuditReportImproved auditReportImproved = new AuditReportImproved();
+		List<AuditReport> auditReportItems = new ArrayList<>();
+		AuditReport auditReport = new AuditReport();
 
 		for (ContainerElementChange change : containerChange.getChanges()) {
 			if (isValueAdded(change)) {
-				handleValueAdded(auditReportImproved, (ValueAdded) change);
+				handleValueAdded(auditReport, (ValueAdded) change);
 			} else if (isValueRemoved(change)) {
 				// TODO
 			}
-			auditReportImprovedItems.add(auditReportImproved);
+			auditReportItems.add(auditReport);
 		}
 
-		return auditReportImprovedItems;
+		return auditReportItems;
 	}
 
-	private void handleValueAdded(AuditReportImproved auditReportImproved, ValueAdded valueAdded) {
+	private void handleValueAdded(AuditReport auditReport, ValueAdded valueAdded) {
 		Object value = valueAdded.getAddedValue();
 		if (isInstanceId(value)) {
 			InstanceId instanceId = (InstanceId) value;
-			auditReportImproved.setChangeType(ChangeType.NewObject);
-			auditReportImproved.setEntityRef(EntityRef
+			auditReport.setChangeType(ChangeType.NewObject);
+			auditReport.setEntityRef(EntityRef
 					.builder()
 					.entity(instanceId.getTypeName())
 					.entityId((Integer) instanceId.getCdoId())
@@ -126,7 +126,7 @@ public class AuditReportServiceImproved {
 		}
 	}
 
-	private void setMetadata(AuditReportImproved auditReportImproved, Change change) {
+	private void setMetadata(AuditReport auditReport, Change change) {
 
 		Metadata metadata = new Metadata();
 
@@ -136,10 +136,10 @@ public class AuditReportServiceImproved {
 			metadata.setCommitDatetime(val.getCommitDateInstant());
 		});
 
-		auditReportImproved.setMetadata(metadata);
+		auditReport.setMetadata(metadata);
 	}
 
-	private void setEntityRef(AuditReportImproved auditReportImproved, Change change) {
+	private void setEntityRef(AuditReport auditReport, Change change) {
 		EntityRef entityRef = new EntityRef();
 		if (isInstanceId(change.getAffectedGlobalId())) {
 			entityRef.setEntity(change.getAffectedGlobalId().getTypeName());
@@ -149,12 +149,12 @@ public class AuditReportServiceImproved {
 			entityRef.setEntity(ownerId.getTypeName());
 			entityRef.setEntityId((Integer) ((InstanceId) ownerId).getCdoId());
 		}
-		auditReportImproved.setEntityRef(entityRef);
+		auditReport.setEntityRef(entityRef);
 	}
 
-	private void handleValueChange(AuditReportImproved auditReportImproved, ValueChange valueChange) {
+	private void handleValueChange(AuditReport auditReport, ValueChange valueChange) {
 
-		auditReportImproved.addPropertyChange(PropertyChange
+		auditReport.addPropertyChange(PropertyChange
 				.builder()
 				.type(valueChange.getChangeType())
 				.property(valueChange.getPropertyName())

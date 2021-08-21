@@ -17,7 +17,7 @@ public class PropertyChange {
 	private String property;
 	private Object left;
 	private Object right;
-	private List<AuditReportImproved> elementChanges;
+	private List<AuditReport> elementChanges;
 
 	@Override
 	public boolean equals(Object obj) {
@@ -61,7 +61,7 @@ public class PropertyChange {
 		return false;
 	}
 
-	private boolean elementChangesContainsAll(List<AuditReportImproved> thatList) {
+	private boolean elementChangesContainsAll(List<AuditReport> thatList) {
 		if (!CollectionUtils.isEmpty(this.elementChanges)) {
 			return this.elementChanges.containsAll(thatList);
 		} else if (CollectionUtils.isEmpty(thatList)){

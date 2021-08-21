@@ -2,9 +2,9 @@ package com.wilterson.javersdemo.web;
 
 import com.wilterson.javersdemo.domain.Merchant;
 import com.wilterson.javersdemo.domain.SearchParameter;
+import com.wilterson.javersdemo.service.AuditReport;
 import com.wilterson.javersdemo.service.AuditReportComparator;
-import com.wilterson.javersdemo.service.AuditReportImproved;
-import com.wilterson.javersdemo.service.AuditReportServiceImproved;
+import com.wilterson.javersdemo.service.AuditReportService;
 import com.wilterson.javersdemo.service.MerchantService;
 import org.javers.core.Changes;
 import org.javers.core.ChangesByCommit;
@@ -27,13 +27,13 @@ import java.util.stream.Collectors;
 public class AuditController {
 
 	private final MerchantService merchantService;
-	private final AuditReportServiceImproved auditReportServiceImproved;
+	private final AuditReportService auditReportService;
 	private final Javers javers;
 
-	public AuditController(MerchantService merchantService, Javers javers, AuditReportServiceImproved auditReportServiceImproved) {
+	public AuditController(MerchantService merchantService, Javers javers, AuditReportService auditReportService) {
 		this.merchantService = merchantService;
 		this.javers = javers;
-		this.auditReportServiceImproved = auditReportServiceImproved;
+		this.auditReportService = auditReportService;
 	}
 
 	/*****************************************************************************************************
@@ -134,11 +134,11 @@ public class AuditController {
 	 *****************************************************************************************************/
 
 	@GetMapping("/merchants/{merchantId}/changes")
-	public ResponseEntity<List<AuditReportImproved>> getMerchantChanges(@PathVariable int merchantId) {
+	public ResponseEntity<List<AuditReport>> getMerchantChanges(@PathVariable int merchantId) {
 
 		Merchant merchant = merchantService.findMerchantById(merchantId);
-		List<AuditReportImproved> auditReportItems = new ArrayList<>();
-		auditReportServiceImproved.auditReport(auditReportItems, merchant.getId(), merchant.getClass().getName());
+		List<AuditReport> auditReportItems = new ArrayList<>();
+		auditReportService.auditReport(auditReportItems, merchant.getId(), merchant.getClass().getName());
 		return ResponseEntity
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
