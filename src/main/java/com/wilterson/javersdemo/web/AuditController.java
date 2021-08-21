@@ -2,7 +2,10 @@ package com.wilterson.javersdemo.web;
 
 import com.wilterson.javersdemo.domain.Merchant;
 import com.wilterson.javersdemo.domain.SearchParameter;
-import com.wilterson.javersdemo.service.*;
+import com.wilterson.javersdemo.service.AuditReportComparator;
+import com.wilterson.javersdemo.service.AuditReportImproved;
+import com.wilterson.javersdemo.service.AuditReportServiceImproved;
+import com.wilterson.javersdemo.service.MerchantService;
 import org.javers.core.Changes;
 import org.javers.core.ChangesByCommit;
 import org.javers.core.Javers;
@@ -24,13 +27,11 @@ import java.util.stream.Collectors;
 public class AuditController {
 
 	private final MerchantService merchantService;
-	private final AuditReportService auditReportService;
 	private final AuditReportServiceImproved auditReportServiceImproved;
 	private final Javers javers;
 
-	public AuditController(MerchantService merchantService, AuditReportService auditReportService, Javers javers, AuditReportServiceImproved auditReportServiceImproved) {
+	public AuditController(MerchantService merchantService, Javers javers, AuditReportServiceImproved auditReportServiceImproved) {
 		this.merchantService = merchantService;
-		this.auditReportService = auditReportService;
 		this.javers = javers;
 		this.auditReportServiceImproved = auditReportServiceImproved;
 	}
@@ -142,16 +143,5 @@ public class AuditController {
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
 				.body(auditReportItems.stream().sorted(new AuditReportComparator()).collect(Collectors.toList()));
-	}
-
-	@GetMapping("/searchParameters/{searchParameterId}/changes")
-	public ResponseEntity<List<AuditReport>> getSearchParameterChanges(@PathVariable int searchParameterId) {
-		SearchParameter searchParameter = merchantService.findSearchParameterById(searchParameterId);
-		QueryBuilder jqlQuery = QueryBuilder.byInstance(searchParameter);
-		Changes changes = javers.findChanges(jqlQuery.build());
-		return ResponseEntity
-				.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(auditReportService.generateAuditReport(changes));
 	}
 }

@@ -5,12 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wilterson.javersdemo.domain.Address;
 import com.wilterson.javersdemo.domain.Merchant;
 import com.wilterson.javersdemo.domain.SearchParameter;
-import com.wilterson.javersdemo.repo.MerchantRepository;
 import com.wilterson.javersdemo.service.*;
-import com.wilterson.javersdemo.service.AuditReportImproved;
-import com.wilterson.javersdemo.service.AuditReportService;
-import com.wilterson.javersdemo.service.ChangeType;
-import org.javers.core.Javers;
 import org.javers.core.diff.changetype.PropertyChangeType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanUtils;
@@ -46,15 +41,6 @@ class AuditControllerTest {
 
 	@Autowired
 	private MerchantService merchantService;
-
-	@Autowired
-	private MerchantRepository merchantRepository;
-
-	@Autowired
-	private AuditReportService auditReportService;
-
-	@Autowired
-	private Javers javers;
 
 	private Merchant createLiveMerchant() {
 
