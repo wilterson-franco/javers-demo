@@ -8,6 +8,7 @@ public enum ChangeType {
 	NEW_ENTITY,
 
 	NewObject,
+	DeletedObject,
 	CollectionChange,
 	ValueChange,
 	PropertyValueChange

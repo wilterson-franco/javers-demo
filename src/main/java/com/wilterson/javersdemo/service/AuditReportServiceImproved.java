@@ -9,9 +9,12 @@ import org.javers.core.diff.changetype.container.ContainerElementChange;
 import org.javers.core.diff.changetype.container.ValueAdded;
 import org.javers.core.diff.changetype.container.ValueRemoved;
 import org.javers.core.diff.changetype.map.MapChange;
+import org.javers.core.metamodel.object.GlobalId;
 import org.javers.core.metamodel.object.InstanceId;
+import org.javers.core.metamodel.object.ValueObjectId;
 import org.javers.repository.jql.QueryBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +30,6 @@ public class AuditReportServiceImproved {
 	}
 
 	public void auditReport(List<AuditReportImproved> auditReportItems, int entityId, String typeName) {
-
 		QueryBuilder jqlQuery = QueryBuilder.byInstanceId(entityId, typeName).withChildValueObjects();
 		List<ChangesByCommit> changesByCommit = javers.findChanges(jqlQuery.build()).groupByCommit();
 
@@ -35,10 +37,14 @@ public class AuditReportServiceImproved {
 
 			AuditReportImproved auditReportImproved = new AuditReportImproved();
 
-			for (Change change : byCommit.get()) {
-				auditReportImproved.setChangeType(ChangeType.NewObject);
+			if (!CollectionUtils.isEmpty(byCommit.get())) {
+				Change change = byCommit.get().get(0);
 				setMetadata(auditReportImproved, change);
 				setEntityRef(auditReportImproved, change);
+				setChangeType(auditReportImproved, byCommit.get());
+			}
+
+			for (Change change : byCommit.get()) {
 				generateAuditReport(auditReportImproved, change);
 			}
 
@@ -53,7 +59,6 @@ public class AuditReportServiceImproved {
 	}
 
 	public void generateAuditReport(AuditReportImproved auditReportImproved, Change change) {
-
 		if (isValueChange(change) || isInitialValueChange(change)) {
 			handleValueChange(auditReportImproved, (ValueChange) change);
 		} else if (isMapChange(change)) {
@@ -73,6 +78,21 @@ public class AuditReportServiceImproved {
 		} else if (isObjectRemoved(change)) {
 			// TODO: to be implemented
 			System.out.println("something");
+		}
+	}
+
+	private void setChangeType(AuditReportImproved auditReportImproved, List<Change> changes) {
+		if (changes.stream().anyMatch(change -> change instanceof NewObject || change instanceof InitialValueChange)) {
+			auditReportImproved.setChangeType(ChangeType.NewObject);
+			return;
+		}
+		if (changes.stream().anyMatch(change -> change instanceof ObjectRemoved)) {
+			auditReportImproved.setChangeType(ChangeType.DeletedObject);
+			return;
+		}
+		if (changes.stream().anyMatch(change -> change instanceof org.javers.core.diff.changetype.PropertyChange)) {
+			auditReportImproved.setChangeType(ChangeType.ValueChange);
+			return;
 		}
 	}
 
@@ -120,12 +140,13 @@ public class AuditReportServiceImproved {
 	}
 
 	private void setEntityRef(AuditReportImproved auditReportImproved, Change change) {
-		EntityRef entityRef = EntityRef
-				.builder()
-				.entity(change.getAffectedGlobalId().getTypeName())
-				.build();
-		if (change.getAffectedGlobalId() instanceof InstanceId) {
+		EntityRef entityRef = new EntityRef();
+		entityRef.setEntity(change.getAffectedGlobalId().getTypeName());
+		if (isInstanceId(change.getAffectedGlobalId())) {
 			entityRef.setEntityId(((InstanceId) change.getAffectedGlobalId()).getCdoId());
+		} else if (isValueObjectId(change.getAffectedGlobalId())) {
+			GlobalId ownerId = ((ValueObjectId) change.getAffectedGlobalId()).getOwnerId();
+			entityRef.setEntityId(((InstanceId)ownerId).getCdoId());
 		}
 		auditReportImproved.setEntityRef(entityRef);
 	}
@@ -180,5 +201,9 @@ public class AuditReportServiceImproved {
 
 	private boolean isInstanceId(Object object) {
 		return object instanceof InstanceId;
+	}
+
+	private boolean isValueObjectId(Object object) {
+		return object instanceof ValueObjectId;
 	}
 }

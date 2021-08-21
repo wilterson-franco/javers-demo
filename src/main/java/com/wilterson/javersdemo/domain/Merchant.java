@@ -30,7 +30,7 @@ public class Merchant {
 	@Embedded
 	private Address address;
 
-//	@DiffIgnore
+	//	@DiffIgnore
 	private String status;
 
 	@DiffIgnore
@@ -97,8 +97,8 @@ public class Merchant {
 			Optional<SearchParameter> optionalThisProd = currSearchParameters
 					.stream()
 					.filter(thisProd ->
-							thisProd.getId().equals(prodToMap.getId()) ||
-									thisProd.getId().equals(prodToMap.getSourceEntityId()) ||
+							(!ObjectUtils.isEmpty(thisProd.getId()) && thisProd.getId().equals(prodToMap.getId())) ||
+									(!ObjectUtils.isEmpty(thisProd.getId()) && thisProd.getId().equals(prodToMap.getSourceEntityId())) ||
 									(!ObjectUtils.isEmpty(prodToMap.getId()) && prodToMap.getId().equals(thisProd.getSourceEntityId())))
 					.findFirst();
 			map.put(prodToMap, optionalThisProd);
