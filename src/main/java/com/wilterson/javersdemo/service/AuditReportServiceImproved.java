@@ -121,7 +121,7 @@ public class AuditReportServiceImproved {
 			auditReportImproved.setEntityRef(EntityRef
 					.builder()
 					.entity(instanceId.getTypeName())
-					.entityId(instanceId.getCdoId())
+					.entityId((Integer) instanceId.getCdoId())
 					.build());
 		}
 	}
@@ -141,12 +141,13 @@ public class AuditReportServiceImproved {
 
 	private void setEntityRef(AuditReportImproved auditReportImproved, Change change) {
 		EntityRef entityRef = new EntityRef();
-		entityRef.setEntity(change.getAffectedGlobalId().getTypeName());
 		if (isInstanceId(change.getAffectedGlobalId())) {
-			entityRef.setEntityId(((InstanceId) change.getAffectedGlobalId()).getCdoId());
+			entityRef.setEntity(change.getAffectedGlobalId().getTypeName());
+			entityRef.setEntityId((Integer) ((InstanceId) change.getAffectedGlobalId()).getCdoId());
 		} else if (isValueObjectId(change.getAffectedGlobalId())) {
 			GlobalId ownerId = ((ValueObjectId) change.getAffectedGlobalId()).getOwnerId();
-			entityRef.setEntityId(((InstanceId)ownerId).getCdoId());
+			entityRef.setEntity(ownerId.getTypeName());
+			entityRef.setEntityId((Integer) ((InstanceId) ownerId).getCdoId());
 		}
 		auditReportImproved.setEntityRef(entityRef);
 	}

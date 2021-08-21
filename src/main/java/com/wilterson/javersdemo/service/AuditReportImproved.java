@@ -2,12 +2,10 @@ package com.wilterson.javersdemo.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
-import org.javers.core.diff.changetype.PropertyChangeType;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Builder
@@ -28,38 +26,55 @@ public class AuditReportImproved {
 		}
 		propertyChanges.add(propertyChange);
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof AuditReportImproved) {
+			AuditReportImproved that = (AuditReportImproved) obj;
+			return this.changeType == that.getChangeType()
+					&& isMetadataEqualsTo(that.getMetadata())
+					&& isEntityRefEqualsTo(that.getEntityRef())
+					&& propertyChangesContainsAll(that.getPropertyChanges());
+		}
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return "AuditReportImproved{" +
+				"changeType=" + changeType +
+				", metadata=" + metadata +
+				", entityRef=" + entityRef +
+				", propertyChanges=" + propertyChanges +
+				'}';
+	}
+
+	private boolean isMetadataEqualsTo(Metadata that) {
+		if (!ObjectUtils.isEmpty(this.metadata)) {
+			return this.metadata.equals(that);
+		} else if (ObjectUtils.isEmpty(that)) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isEntityRefEqualsTo(EntityRef that) {
+		if (!ObjectUtils.isEmpty(this.entityRef)) {
+			return this.entityRef.equals(that);
+		} else if (ObjectUtils.isEmpty(that)) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean propertyChangesContainsAll(List<PropertyChange> thatList) {
+		if (!CollectionUtils.isEmpty(this.propertyChanges)) {
+			return this.propertyChanges.containsAll(thatList);
+		} else if (CollectionUtils.isEmpty(thatList)){
+			return true;
+		}
+		return false;
+	}
+
 }
 
-@Builder
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-class Metadata {
-	private String author;
-	private String commitId;
-	private Instant commitDatetime;
-}
-
-@Builder
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-class EntityRef {
-	private String entity;
-	private Object entityId;
-}
-
-@Builder
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-class PropertyChange {
-	private PropertyChangeType type;
-	private String property;
-	private Object left;
-	private Object right;
-	private List<AuditReportImproved> elementChanges;
-}

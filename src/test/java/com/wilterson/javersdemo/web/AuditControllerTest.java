@@ -6,11 +6,12 @@ import com.wilterson.javersdemo.domain.Address;
 import com.wilterson.javersdemo.domain.Merchant;
 import com.wilterson.javersdemo.domain.SearchParameter;
 import com.wilterson.javersdemo.repo.MerchantRepository;
-import com.wilterson.javersdemo.service.AuditReport;
+import com.wilterson.javersdemo.service.*;
+import com.wilterson.javersdemo.service.AuditReportImproved;
 import com.wilterson.javersdemo.service.AuditReportService;
 import com.wilterson.javersdemo.service.ChangeType;
-import com.wilterson.javersdemo.service.MerchantService;
 import org.javers.core.Javers;
+import org.javers.core.diff.changetype.PropertyChangeType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class AuditControllerTest {
 
-	private static final String MERCHANT_CHANGES = "/merchants/{merchantId}/propertyChanges";
+	private static final String MERCHANT_CHANGES = "/merchants/{merchantId}/changes";
 
 	@Autowired
 	MockMvc mockMvc;
@@ -111,28 +113,48 @@ class AuditControllerTest {
 				.andReturn();
 
 		// then
-		JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, AuditReport.class);
-		List<AuditReport> resp = objectMapper.readValue(result.getResponse().getContentAsString(), type);
+		JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, AuditReportImproved.class);
+		List<AuditReportImproved> resp = objectMapper.readValue(result.getResponse().getContentAsString(), type);
 
-		List<AuditReport> expected = Stream.of(
-				AuditReport.builder().build())
+		List<AuditReportImproved> expected = Stream.of(
+				AuditReportImproved.builder().build())
 				.collect(Collectors.toList());
 
-		assertThat(resp).hasSize(7);
+		// Three changes:
+		// 0. new merchant entity
+		// 1. new searchParameter entity
+		// 2. searchParameter update (name TRANSACTION_ID to ARN and required true to false)
+		assertThat(resp).hasSize(3);
 
-		// new merchant entity
-		assertThat(resp.get(0).getChangeType()).isEqualTo(ChangeType.NEW_ENTITY);
-		assertThat(resp.get(0).getEntity()).isEqualTo("com.wilterson.javersdemo.domain.Merchant");
-		assertThat(resp.get(0).getAuthor()).isEqualTo("Wilterson Test");
-		assertThat(resp.get(0).getCommitDatetime()).isBeforeOrEqualTo(Instant.now());
+		AuditReportImproved auditReportImproved = resp.get(0);
 
-		// merchant.name
-		assertThat(resp.get(1).getChangeType()).isEqualTo(ChangeType.PROPERTY_VALUE_CHANGED);
-		assertThat(resp.get(1).getEntity()).isEqualTo("com.wilterson.javersdemo.domain.Merchant");
-		assertThat(resp.get(1).getOldPropertyValue()).isNull();
-		assertThat(resp.get(1).getPropertyName()).isEqualTo("name");
-		assertThat(resp.get(1).getNewPropertyValue()).isEqualTo("Some Store");
-		assertThat(resp.get(1).getAuthor()).isEqualTo("Wilterson Test");
-		assertThat(resp.get(1).getCommitDatetime()).isBeforeOrEqualTo(Instant.now());
+		assertThat(auditReportImproved.getChangeType()).isEqualTo(ChangeType.NewObject);
+
+		assertThat(auditReportImproved.getEntityRef().getEntity()).isEqualTo("com.wilterson.javersdemo.domain.Merchant");
+		assertThat(auditReportImproved.getEntityRef().getEntityId()).isEqualTo(1);
+
+		assertThat(auditReportImproved.getMetadata().getAuthor()).isEqualTo("Wilterson Test");
+		assertThat(auditReportImproved.getMetadata().getCommitId()).isEqualTo("1.00");
+		assertThat(auditReportImproved.getMetadata().getCommitDatetime()).isBeforeOrEqualTo(Instant.now());
+
+		assertThat(auditReportImproved.getPropertyChanges()).contains(PropertyChange
+				.builder()
+				.type(PropertyChangeType.PROPERTY_VALUE_CHANGED)
+				.property("searchParameters")
+				.left(null)
+				.right(null)
+				.elementChanges(Collections.singletonList(AuditReportImproved
+						.builder()
+						.changeType(ChangeType.NewObject)
+						.metadata(null)
+						.entityRef(EntityRef
+								.builder()
+								.entity("com.wilterson.javersdemo.domain.SearchParameter")
+								.entityId(2)
+								.build())
+						.propertyChanges(null)
+						.build()))
+				.build());
+
 	}
 }
