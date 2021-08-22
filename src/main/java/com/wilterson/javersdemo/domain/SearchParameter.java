@@ -21,7 +21,7 @@ public class SearchParameter {
 
 	private String name;
 
-	private boolean required;
+	private Boolean required;
 
 	@DiffIgnore
 	private Integer sourceEntityId;
@@ -37,7 +37,7 @@ public class SearchParameter {
 	}
 
 	public void copyProperties(SearchParameter from) {
-		required = from.isRequired();
+		required = from.getRequired();
 		name = from.getName();
 		sourceEntityId = from.getSourceEntityId();
 	}

@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -112,35 +113,123 @@ class AuditControllerTest {
 		// 2. searchParameter update (name TRANSACTION_ID to ARN and required true to false)
 		assertThat(resp).hasSize(3);
 
+		// 0. new merchant entity
 		AuditReport auditReport = resp.get(0);
-
 		assertThat(auditReport.getChangeType()).isEqualTo(ChangeType.NewObject);
+		assertEntityRef(auditReport, "com.wilterson.javersdemo.domain.Merchant", 1);
+		assertMetadata(auditReport, "Wilterson Test", "1.00", Instant.now());
+		EntityRef searchParameterRef = getEntityRef("com.wilterson.javersdemo.domain.SearchParameter", 2);
+		AuditReport auditReportSearchParamter = getAuditReport(ChangeType.NewObject, null, searchParameterRef, null);
+		assertPropertyChanges(auditReport, Arrays.asList(getPropertyChange(
+				PropertyChangeType.PROPERTY_VALUE_CHANGED,
+				"searchParameters",
+				null,
+				null,
+				Collections.singletonList(auditReportSearchParamter)),
+				getPropertyChange(
+						PropertyChangeType.PROPERTY_VALUE_CHANGED,
+						"name",
+						null,
+						"Some Store",
+						Collections.emptyList()),
+				getPropertyChange(
+						PropertyChangeType.PROPERTY_VALUE_CHANGED,
+						"status",
+						null,
+						"LIVE",
+						Collections.emptyList()),
+				getPropertyChange(
+						PropertyChangeType.PROPERTY_VALUE_CHANGED,
+						"address",
+						null,
+						"999 Blue Street",
+						Collections.emptyList()),
+				getPropertyChange(
+						PropertyChangeType.PROPERTY_VALUE_CHANGED,
+						"postalCode",
+						null,
+						"A1B 2C3",
+						Collections.emptyList())));
 
-		assertThat(auditReport.getEntityRef().getEntity()).isEqualTo("com.wilterson.javersdemo.domain.Merchant");
-		assertThat(auditReport.getEntityRef().getEntityId()).isEqualTo(1);
+		// 1. new searchParameter entity
+		auditReport = resp.get(1);
+		assertThat(auditReport.getChangeType()).isEqualTo(ChangeType.NewObject);
+		assertEntityRef(auditReport, "com.wilterson.javersdemo.domain.SearchParameter", 2);
+		assertMetadata(auditReport, "Wilterson Test", "1.00", Instant.now());
+		assertPropertyChanges(auditReport, Arrays.asList(getPropertyChange(
+				PropertyChangeType.PROPERTY_VALUE_CHANGED,
+				"name",
+				null,
+				"TRANSACTION_ID",
+				Collections.emptyList()),
+				getPropertyChange(
+						PropertyChangeType.PROPERTY_VALUE_CHANGED,
+						"required",
+						null,
+						true,
+						Collections.emptyList())
+		));
 
-		assertThat(auditReport.getMetadata().getAuthor()).isEqualTo("Wilterson Test");
-		assertThat(auditReport.getMetadata().getCommitId()).isEqualTo("1.00");
-		assertThat(auditReport.getMetadata().getCommitDatetime()).isBeforeOrEqualTo(Instant.now());
+		// 2. searchParameter update (name TRANSACTION_ID to ARN and required true to false)
+		auditReport = resp.get(2);
+		assertThat(auditReport.getChangeType()).isEqualTo(ChangeType.ValueChange);
+		assertEntityRef(auditReport, "com.wilterson.javersdemo.domain.SearchParameter", 2);
+		assertMetadata(auditReport, "Wilterson Test", "2.00", Instant.now());
+		assertPropertyChanges(auditReport, Arrays.asList(getPropertyChange(
+				PropertyChangeType.PROPERTY_VALUE_CHANGED,
+				"name",
+				"TRANSACTION_ID",
+				"ARN",
+				Collections.emptyList()),
+				getPropertyChange(
+						PropertyChangeType.PROPERTY_VALUE_CHANGED,
+						"required",
+						false,
+						true,
+						Collections.emptyList())));
+	}
 
-		assertThat(auditReport.getPropertyChanges()).contains(PropertyChange
+	private void assertPropertyChanges(AuditReport auditReport, List<PropertyChange> propertyChangeList) {
+		assertThat(auditReport.getPropertyChanges()).containsAll(propertyChangeList);
+	}
+
+	private void assertEntityRef(AuditReport auditReport, String entityRef, Integer entityId) {
+		assertThat(auditReport.getEntityRef().getEntity()).isEqualTo(entityRef);
+		assertThat(auditReport.getEntityRef().getEntityId()).isEqualTo(entityId);
+	}
+
+	private void assertMetadata(AuditReport auditReport, String author, String commitId, Instant commitDatetime) {
+		assertThat(auditReport.getMetadata().getAuthor()).isEqualTo(author);
+		assertThat(auditReport.getMetadata().getCommitId()).isEqualTo(commitId);
+		assertThat(auditReport.getMetadata().getCommitDatetime()).isBeforeOrEqualTo(commitDatetime);
+	}
+
+	private PropertyChange getPropertyChange(PropertyChangeType type, String propertyName, Object left, Object right, List<AuditReport> elementChanges) {
+		return PropertyChange
 				.builder()
-				.type(PropertyChangeType.PROPERTY_VALUE_CHANGED)
-				.property("searchParameters")
-				.left(null)
-				.right(null)
-				.elementChanges(Collections.singletonList(AuditReport
-						.builder()
-						.changeType(ChangeType.NewObject)
-						.metadata(null)
-						.entityRef(EntityRef
-								.builder()
-								.entity("com.wilterson.javersdemo.domain.SearchParameter")
-								.entityId(2)
-								.build())
-						.propertyChanges(null)
-						.build()))
-				.build());
+				.property(propertyName)
+				.type(type)
+				.left(left)
+				.right(right)
+				.elementChanges(elementChanges)
+				.build();
+	}
 
+	private AuditReport getAuditReport(ChangeType changeType, Metadata metadata, EntityRef entityRef, List<PropertyChange> propertyChanges) {
+		return AuditReport
+				.builder()
+				.changeType(changeType)
+				.metadata(metadata)
+				.entityRef(entityRef)
+				.propertyChanges(propertyChanges)
+				.build();
+	}
+
+	private EntityRef getEntityRef(String entity, Integer entityId) {
+		return EntityRef
+				.builder()
+				.entity(entity)
+				.entityId(entityId)
+				.build();
 	}
 }
