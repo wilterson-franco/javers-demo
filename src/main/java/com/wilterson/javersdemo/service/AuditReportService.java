@@ -29,7 +29,9 @@ public class AuditReportService {
 		this.javers = javers;
 	}
 
-	public void auditReport(List<AuditReport> auditReportItems, int entityId, String typeName) {
+	public List<AuditReport> auditReport( int entityId, String typeName) {
+		List<AuditReport> auditReportItems = new ArrayList<>();
+
 		QueryBuilder jqlQuery = QueryBuilder.byInstanceId(entityId, typeName).withChildValueObjects();
 		List<ChangesByCommit> changesByCommit = javers.findChanges(jqlQuery.build()).groupByCommit();
 
@@ -52,10 +54,11 @@ public class AuditReportService {
 
 			for (PropertyChange change : auditReport.getPropertyChanges()) {
 				for (AuditReport elementChange : change.getElementChanges()) {
-					auditReport(auditReportItems, (Integer) elementChange.getEntityRef().getEntityId(), elementChange.getEntityRef().getEntity());
+					auditReportItems.addAll(auditReport(elementChange.getEntityRef().getEntityId(), elementChange.getEntityRef().getEntity()));
 				}
 			}
 		}
+		return auditReportItems;
 	}
 
 	public void generateAuditReport(AuditReport auditReport, Change change) {

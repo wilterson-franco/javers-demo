@@ -137,8 +137,7 @@ public class AuditController {
 	public ResponseEntity<List<AuditReport>> getMerchantChanges(@PathVariable int merchantId) {
 
 		Merchant merchant = merchantService.findMerchantById(merchantId);
-		List<AuditReport> auditReportItems = new ArrayList<>();
-		auditReportService.auditReport(auditReportItems, merchant.getId(), merchant.getClass().getName());
+		List<AuditReport> auditReportItems = auditReportService.auditReport(merchant.getId(), merchant.getClass().getName());
 		return ResponseEntity
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
