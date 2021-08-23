@@ -16,9 +16,11 @@ import org.javers.repository.jql.QueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AuditReportService {
@@ -29,7 +31,7 @@ public class AuditReportService {
 		this.javers = javers;
 	}
 
-	public List<AuditReport> auditReport( int entityId, String typeName) {
+	public List<AuditReport> auditReport(int entityId, String typeName) {
 		List<AuditReport> auditReportItems = new ArrayList<>();
 
 		QueryBuilder jqlQuery = QueryBuilder.byInstanceId(entityId, typeName).withChildValueObjects();
@@ -53,12 +55,21 @@ public class AuditReportService {
 			auditReportItems.add(auditReport);
 
 			for (PropertyChange change : auditReport.getPropertyChanges()) {
-				for (AuditReport elementChange : change.getElementChanges()) {
+
+				List<AuditReport> elementChanges = change.getElementChanges()
+						.stream()
+						.filter(elemChange -> elemChange.getChangeType() != ChangeType.DeletedObject)
+						.collect(Collectors.toList());
+
+				for (AuditReport elementChange : elementChanges) {
 					auditReportItems.addAll(auditReport(elementChange.getEntityRef().getEntityId(), elementChange.getEntityRef().getEntity()));
 				}
 			}
 		}
-		return auditReportItems;
+		return auditReportItems
+				.stream()
+				.sorted(new AuditReportComparator())
+				.collect(Collectors.toList());
 	}
 
 	public void generateAuditReport(AuditReport auditReport, Change change) {
@@ -100,33 +111,47 @@ public class AuditReportService {
 	}
 
 	private List<AuditReport> handleContainerChange(ContainerChange containerChange) {
-
 		List<AuditReport> auditReportItems = new ArrayList<>();
-		AuditReport auditReport = new AuditReport();
-
 		for (ContainerElementChange change : containerChange.getChanges()) {
 			if (isValueAdded(change)) {
-				handleValueAdded(auditReport, (ValueAdded) change);
+				auditReportItems.add(handleValueAdded((ValueAdded) change));
 			} else if (isValueRemoved(change)) {
-				// TODO
+				auditReportItems.add(handleValueRemoved((ValueRemoved) change));
 			}
-			auditReportItems.add(auditReport);
 		}
-
 		return auditReportItems;
 	}
 
-	private void handleValueAdded(AuditReport auditReport, ValueAdded valueAdded) {
+	private AuditReport handleValueAdded(ValueAdded valueAdded) {
 		Object value = valueAdded.getAddedValue();
-		if (isInstanceId(value)) {
-			InstanceId instanceId = (InstanceId) value;
-			auditReport.setChangeType(ChangeType.NewObject);
-			auditReport.setEntityRef(EntityRef
-					.builder()
-					.entity(instanceId.getTypeName())
-					.entityId((Integer) instanceId.getCdoId())
-					.build());
+		if (!isInstanceId(value)) {
+			throw new InvalidParameterException("Added entity should be an InstanceId object");
 		}
+		InstanceId instanceId = (InstanceId) value;
+		return AuditReport
+				.builder()
+				.changeType(ChangeType.NewObject)
+				.entityRef(EntityRef
+						.builder()
+						.entity(instanceId.getTypeName())
+						.entityId((Integer) instanceId.getCdoId())
+						.build())
+				.build();
+	}
+
+	private AuditReport handleValueRemoved(ValueRemoved valueRemoved) {
+		Object value = valueRemoved.getRemovedValue();
+		if (!isInstanceId(value)) {
+			throw new InvalidParameterException("Removed entity should be an InstanceId object");
+		}
+		InstanceId instanceId = (InstanceId) value;
+		return AuditReport.builder().changeType(ChangeType.DeletedObject)
+				.entityRef(EntityRef
+						.builder()
+						.entity(instanceId.getTypeName())
+						.entityId((Integer) instanceId.getCdoId())
+						.build())
+				.build();
 	}
 
 	private void setMetadata(AuditReport auditReport, Change change) {

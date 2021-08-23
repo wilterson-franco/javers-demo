@@ -64,7 +64,7 @@ public class PropertyChange {
 	private boolean elementChangesContainsAll(List<AuditReport> thatList) {
 		if (!CollectionUtils.isEmpty(this.elementChanges)) {
 			return this.elementChanges.containsAll(thatList);
-		} else if (CollectionUtils.isEmpty(thatList)){
+		} else if (CollectionUtils.isEmpty(thatList)) {
 			return true;
 		}
 		return false;
