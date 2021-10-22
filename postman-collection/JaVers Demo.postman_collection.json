@@ -1,0 +1,418 @@
+{
+	"info": {
+		"_postman_id": "b700ebdf-5f23-4713-b2a7-6dace469efa0",
+		"name": "JaVers Demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Merchant Handling",
+			"item": [
+				{
+					"name": "createMerchant",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Wilterson Store\",\r\n    \"address\": {\r\n        \"address\": \"777 Green Way\",\r\n        \"postalCode\": \"1A2 B3C\"\r\n    },\r\n    \"contentTypes\": [\r\n        \"GAMBLING\",\r\n        \"ONLINE_DATING\"\r\n    ],\r\n    \"searchParameters\": [\r\n        {\r\n            \"name\": \"TRANSACTION_ID\",\r\n            \"required\": true\r\n        },\r\n        {\r\n            \"name\": \"CARD_FIRXT_SIX\",\r\n            \"required\": false\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "checkIn (Entity ID 1)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants/1/live",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants",
+								"1",
+								"live"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "checkOut",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants/1/config",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants",
+								"1",
+								"config"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update (simple change)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"name\": \"John Doe Store\",\r\n    \"address\": {\r\n        \"address\": \"777 Green Way\",\r\n        \"postalCode\": \"1A2 B3C\"\r\n    },\r\n    \"guid\": \"S5OMFWV81EAFZJ06\",\r\n    \"sourceEntityId\": 1,\r\n    \"searchParameters\": [\r\n        {\r\n            \"id\": 4,\r\n            \"name\": \"ARN\",\r\n            \"required\": false,\r\n            \"sourceEntityId\": 2\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants/4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update (add searchParameter)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"name\": \"Wilterson Store\",\r\n    \"address\": {\r\n        \"address\": \"777 Green Way\",\r\n        \"postalCode\": \"1A2 B3C\"\r\n    },\r\n    \"status\": \"CONFIGURATION\",\r\n    \"guid\": \"M6A5UZW4P6T3CS5O\",\r\n    \"sourceEntityId\": 1,\r\n    \"searchParameters\": [\r\n        {\r\n            \"id\": 4,\r\n            \"name\": \"TRANSACTION_ID\",\r\n            \"required\": true,\r\n            \"sourceEntityId\": 2\r\n        },\r\n        {\r\n            \"name\": \"ARN\",\r\n            \"required\": false,\r\n            \"sourceEntityId\": 2\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants/4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update (remove searchParameter)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"name\": \"Wilterson Store\",\r\n    \"address\": {\r\n        \"address\": \"777 Green Way\",\r\n        \"postalCode\": \"1A2 B3C\"\r\n    },\r\n    \"status\": \"CONFIGURATION\",\r\n    \"guid\": \"RL0P9ODPZ74B92YA\",\r\n    \"sourceEntityId\": 1,\r\n    \"searchParameters\": [\r\n        {\r\n            \"id\": 5,\r\n            \"name\": \"TRANSACTION_ID\",\r\n            \"required\": true,\r\n            \"sourceEntityId\": 2\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants/4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update (change existent searchParameter)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"name\": \"Wilterson Store\",\r\n    \"address\": {\r\n        \"address\": \"777 Green Way\",\r\n        \"postalCode\": \"1A2 B3C\"\r\n    },\r\n    \"status\": \"CONFIGURATION\",\r\n    \"guid\": \"YDZJTDLVWMSVHRJE\",\r\n    \"sourceEntityId\": 1,\r\n    \"searchParameters\": [\r\n        {\r\n            \"id\": 4,\r\n            \"name\": \"ARN\",\r\n            \"required\": true,\r\n            \"sourceEntityId\": 2\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants/4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "checkIn (Entity ID 4)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7777/merchants/4/live",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7777",
+							"path": [
+								"merchants",
+								"4",
+								"live"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Audit Log",
+			"item": [
+				{
+					"name": "Raw Changes",
+					"item": [
+						{
+							"name": "getMerchantRawChanges",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7777/merchants/1/raw-changes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7777",
+									"path": [
+										"merchants",
+										"1",
+										"raw-changes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getSearchParameterRawChanges",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7777/searchParameters/2/raw-changes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7777",
+									"path": [
+										"searchParameters",
+										"2",
+										"raw-changes"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Shadows",
+					"item": [
+						{
+							"name": "getMerchantShadows",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7777/merchants/1/shadows",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7777",
+									"path": [
+										"merchants",
+										"1",
+										"shadows"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Snapshots",
+					"item": [
+						{
+							"name": "getSearchParameterSnapshots",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7777/searchParameters/snapshots",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7777",
+									"path": [
+										"searchParameters",
+										"snapshots"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getMerchantsSnapshots",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7777/merchants/snapshots",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7777",
+									"path": [
+										"merchants",
+										"snapshots"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getMerchantSnapshot",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7777/merchants/1/snapshot",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7777",
+									"path": [
+										"merchants",
+										"1",
+										"snapshot"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Audit Changes",
+					"item": [
+						{
+							"name": "getMerchantChanges",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7777/merchants/1/changes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7777",
+									"path": [
+										"merchants",
+										"1",
+										"changes"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}
