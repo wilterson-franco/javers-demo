@@ -39,6 +39,9 @@ public class Merchant {
 	@DiffIgnore
 	private Integer sourceEntityId;
 
+	@Convert(converter = ContentTypeAttributeConverter.class)
+	private Set<ContentType> contentTypes;
+
 	@JsonManagedReference
 	@OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<SearchParameter> searchParameters = new ArrayList<>();
