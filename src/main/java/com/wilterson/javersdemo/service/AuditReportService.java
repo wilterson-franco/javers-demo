@@ -4,10 +4,7 @@ import org.javers.core.ChangesByCommit;
 import org.javers.core.Javers;
 import org.javers.core.diff.Change;
 import org.javers.core.diff.changetype.*;
-import org.javers.core.diff.changetype.container.ContainerChange;
-import org.javers.core.diff.changetype.container.ContainerElementChange;
-import org.javers.core.diff.changetype.container.ValueAdded;
-import org.javers.core.diff.changetype.container.ValueRemoved;
+import org.javers.core.diff.changetype.container.*;
 import org.javers.core.diff.changetype.map.MapChange;
 import org.javers.core.metamodel.object.GlobalId;
 import org.javers.core.metamodel.object.InstanceId;
@@ -15,7 +12,7 @@ import org.javers.core.metamodel.object.ValueObjectId;
 import org.javers.repository.jql.QueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
+import org.springframework.util.ObjectUtils;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,7 +59,9 @@ public class AuditReportService {
 						.collect(Collectors.toList());
 
 				for (AuditReport elementChange : elementChanges) {
-					auditReportItems.addAll(auditReport(elementChange.getEntityRef().getEntityId(), elementChange.getEntityRef().getEntity()));
+					if (!ObjectUtils.isEmpty(elementChange.getEntityRef())) {
+						auditReportItems.addAll(auditReport(elementChange.getEntityRef().getEntityId(), elementChange.getEntityRef().getEntity()));
+					}
 				}
 			}
 		}
@@ -112,17 +111,36 @@ public class AuditReportService {
 
 	private List<AuditReport> handleContainerChange(ContainerChange containerChange) {
 		List<AuditReport> auditReportItems = new ArrayList<>();
-		for (ContainerElementChange change : containerChange.getChanges()) {
-			if (isValueAdded(change)) {
-				auditReportItems.add(handleValueAdded((ValueAdded) change));
-			} else if (isValueRemoved(change)) {
-				auditReportItems.add(handleValueRemoved((ValueRemoved) change));
+		List<ContainerElementChange> containerElementChanges = containerChange.getChanges();
+		if (containerChange instanceof ListChange) {
+			// handles new entities added to lists (a new entidy has been created)
+			for (ContainerElementChange change : containerElementChanges) {
+				if (isValueAdded(change)) {
+					auditReportItems.add(handleEntityAdded((ValueAdded) change));
+				} else if (isValueRemoved(change)) {
+					auditReportItems.add(handleEntityRemoved((ValueRemoved) change));
+				}
 			}
+		} else {
+			// instance of SetChange - handles objects (non-entities) added to lists
+			List<PropertyChange> propertyChanges = new ArrayList<>(containerElementChanges.size());
+			for (ContainerElementChange containerElementChange : containerElementChanges) {
+				if (isValueAdded(containerElementChange)) {
+					propertyChanges.add(handleValueAdded(containerElementChange));
+				} else if (isValueRemoved(containerElementChange)) {
+					propertyChanges.add(handleValueRemoved(containerElementChange));
+				}
+			}
+			auditReportItems.add(AuditReport
+					.builder()
+					.changeType(ChangeType.CollectionChange)
+					.propertyChanges(propertyChanges)
+					.build());
 		}
 		return auditReportItems;
 	}
 
-	private AuditReport handleValueAdded(ValueAdded valueAdded) {
+	private AuditReport handleEntityAdded(ValueAdded valueAdded) {
 		Object value = valueAdded.getAddedValue();
 		if (!isInstanceId(value)) {
 			throw new InvalidParameterException("Added entity should be an InstanceId object");
@@ -139,7 +157,7 @@ public class AuditReportService {
 				.build();
 	}
 
-	private AuditReport handleValueRemoved(ValueRemoved valueRemoved) {
+	private AuditReport handleEntityRemoved(ValueRemoved valueRemoved) {
 		Object value = valueRemoved.getRemovedValue();
 		if (!isInstanceId(value)) {
 			throw new InvalidParameterException("Removed entity should be an InstanceId object");
@@ -151,6 +169,28 @@ public class AuditReportService {
 						.entity(instanceId.getTypeName())
 						.entityId((Integer) instanceId.getCdoId())
 						.build())
+				.build();
+	}
+
+	private PropertyChange handleValueAdded(ContainerElementChange change) {
+		Object addedValue = ((ValueAdded) change).getAddedValue();
+		return PropertyChange
+				.builder()
+				.type(PropertyChangeType.PROPERTY_VALUE_CHANGED)
+				.property(addedValue.getClass().getSimpleName())
+				.right(addedValue)
+				.elementChanges(Collections.emptyList())
+				.build();
+	}
+
+	private PropertyChange handleValueRemoved(ContainerElementChange change) {
+		Object removedValue = ((ValueRemoved) change).getRemovedValue();
+		return PropertyChange
+				.builder()
+				.type(PropertyChangeType.PROPERTY_VALUE_CHANGED)
+				.property(removedValue.getClass().getSimpleName())
+				.left(removedValue)
+				.elementChanges(Collections.emptyList())
 				.build();
 	}
 

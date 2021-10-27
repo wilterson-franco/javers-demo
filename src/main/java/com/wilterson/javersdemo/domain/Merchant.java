@@ -59,6 +59,7 @@ public class Merchant {
 		name = from.getName();
 		status = from.getStatus();
 		guid = from.getGuid();
+		contentTypes = from.getContentTypes();
 
 		if (!ObjectUtils.isEmpty(from.getAddress())) {
 			address.copyProperties(from.getAddress());
